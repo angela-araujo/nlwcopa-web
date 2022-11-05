@@ -23,21 +23,27 @@ export default function Home(props: HomeProps) {
     event.preventDefault();
 
     try {
-      const response = await api.post('/pools', {
-        title: poolTitle,
-      });
 
-      const { code } = response.data;
+      if (poolTitle.trim().length > 0) {
+        const response = await api.post('/pools', {
+          title: poolTitle,
+        });
 
-      await navigator.clipboard.writeText(code);
+        const { code } = response.data;
 
-      alert('Bolão criado com sucesso, o código foi copiado para a área de transferência!');
+        await navigator.clipboard.writeText(code);
 
-      setPoolTitle('')
+        alert('Bolão criado com sucesso, o código foi copiado para a área de transferência!');
+
+        setPoolTitle('');
+      } else throw new Error('Título não pode ser vazio');
 
     } catch (error) {
-      console.log(error)
-      alert('Falha ao criar o bolão, tente novamente!')
+
+      console.log(error);
+      alert('Falha ao criar o bolão, tente novamente!');
+      setPoolTitle('');
+
     }
 
   }
@@ -113,7 +119,9 @@ export default function Home(props: HomeProps) {
   )
 }
 
-export const getServerSideProps = async () => {
+// Static Site Generation
+export const getStaticProps = async () => {
+
   const [poolCountResponse, guessCountResponse, userCountResponse] = await Promise.all([
     api.get('pools/count'),
     api.get('guesses/count'),
@@ -125,6 +133,7 @@ export const getServerSideProps = async () => {
       poolCount: poolCountResponse.data.count,
       guessCount: guessCountResponse.data.count,
       userCount: userCountResponse.data.count
-    }
+    },
+    revalidate: 10
   }
 }
